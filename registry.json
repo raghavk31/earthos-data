@@ -1,0 +1,640 @@
+{
+ "specs": {
+  "building_footprints": {
+   "id": "building_footprints",
+   "theme": "built",
+   "title": "building footprints",
+   "unit": "share of ground",
+   "kind": "vector",
+   "method": "Overture's conflated footprints (OSM, Google Open Buildings, Microsoft). Traced and machine-detected shapes are mixed, so the layer is shown as modelled, the weaker of the two.\n",
+   "confidence": "modelled",
+   "aggregate": {
+    "grid": "share",
+    "ward": "share"
+   },
+   "sources": [
+    "overture_buildings",
+    "osm"
+   ],
+   "implements": {
+    "py": "earthos.buildings.fetch_footprints"
+   },
+   "shown": "modelled",
+   "built": true
+  },
+  "building_heights": {
+   "id": "building_heights",
+   "theme": "built",
+   "title": "building heights",
+   "unit": "m",
+   "kind": "raster",
+   "method": "Open Buildings 2.5D Temporal heights (4 m effective, latest year) where Earth Engine is set up, else GHS-BUILT-H's average net building height (about 90 m, 2018); the mean over pixels with a building, so empty ground does not pull a unit down.\n",
+   "confidence": "modelled",
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "sources": [
+    "open_buildings_25d",
+    "ghs_built_h"
+   ],
+   "implements": {
+    "py": "earthos.buildings.fetch_heights"
+   },
+   "shown": "modelled",
+   "built": false
+  },
+  "city_boundary": {
+   "id": "city_boundary",
+   "theme": "profile",
+   "title": "city boundary",
+   "unit": "",
+   "kind": "vector",
+   "method": "The union of the city's wards, so the city is exactly the area its wards cover.",
+   "confidence": "measured",
+   "inputs": [
+    "wards"
+   ],
+   "implements": {
+    "py": "earthos.wards.boundary"
+   },
+   "shown": "measured",
+   "built": true
+  },
+  "density": {
+   "id": "density",
+   "theme": "profile",
+   "title": "density",
+   "unit": "people per hectare",
+   "kind": "grid",
+   "method": "People divided by land area (water excluded), computed again from the sums at each unit.",
+   "confidence": "modelled",
+   "inputs": [
+    "population",
+    "land_cover"
+   ],
+   "aggregate": {
+    "grid": "recompute",
+    "ward": "recompute"
+   },
+   "implements": {
+    "py": "earthos.population.density"
+   },
+   "shown": "modelled",
+   "built": true
+  },
+  "land_cover": {
+   "id": "land_cover",
+   "theme": "ground",
+   "title": "land cover",
+   "unit": "share",
+   "kind": "raster",
+   "method": "ESA WorldCover classes at 10 m, as each class's share of every grid cell and ward.",
+   "confidence": "modelled",
+   "aggregate": {
+    "grid": "share",
+    "ward": "share"
+   },
+   "sources": [
+    "bhuvan_lulc",
+    "esa_worldcover",
+    "dynamic_world"
+   ],
+   "implements": {
+    "py": "earthos.landcover.fetch"
+   },
+   "shown": "modelled",
+   "built": true
+  },
+  "lst_hot_season": {
+   "id": "lst_hot_season",
+   "theme": "heat",
+   "title": "land surface temperature, hot season",
+   "unit": "°C",
+   "kind": "raster",
+   "method": "Median of clear Landsat 8/9 C2 L2 surface-temperature scenes in the hot months of the chosen years; QA bits 0 to 5 masked; ST_QA uncertainty over 5 K dropped. Surface, not air.\n",
+   "confidence": "measured",
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "sources": [
+    "landsat_c2_l2_st"
+   ],
+   "implements": {
+    "py": "earthos.lst.fetch_lst"
+   },
+   "shown": "measured",
+   "built": true
+  },
+  "night_lights": {
+   "id": "night_lights",
+   "theme": "energy",
+   "title": "night lights",
+   "unit": "nW/cm²/sr",
+   "kind": "raster",
+   "method": "VIIRS annual radiance (NASA Black Marble, near-nadir, snow-free), the mean per cell and ward; measured light, used only as a proxy for activity.\n",
+   "confidence": "measured",
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "sources": [
+    "black_marble",
+    "viirs_vnl"
+   ],
+   "implements": {
+    "py": "earthos.energy.fetch_black_marble"
+   },
+   "shown": "measured",
+   "built": true
+  },
+  "population": {
+   "id": "population",
+   "theme": "profile",
+   "title": "people",
+   "unit": "people",
+   "kind": "raster",
+   "method": "Modelled population per 30 m pixel (census counts spread over detected buildings), summed to the 150 m grid and to wards.\n",
+   "confidence": "modelled",
+   "aggregate": {
+    "grid": "sum",
+    "ward": "sum"
+   },
+   "sources": [
+    "meta_hrsl",
+    "worldpop",
+    "ghs_pop"
+   ],
+   "implements": {
+    "py": "earthos.population.fetch"
+   },
+   "shown": "modelled",
+   "built": true
+  },
+  "space_syntax": {
+   "id": "space_syntax",
+   "theme": "movement",
+   "title": "space syntax (integration and choice)",
+   "unit": "",
+   "kind": "grid",
+   "method": "Angular segment analysis on the walkable streets. City-wide: NAIN and NACH at 2 km, exact from every segment; NAIN at n, estimated from 400 random origins (angular depth is symmetric, so their depths give every segment an unbiased estimate of its total depth). The window computes 400 m and 800 m live. Cells and wards take the mean of the segments whose middles fall in them.\n",
+   "confidence": "modelled",
+   "inputs": [
+    "streets"
+   ],
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "implements": {
+    "py": "earthos.citysyntax.run",
+    "ts": "syntax.analyse"
+   },
+   "shown": "modelled",
+   "built": true
+  },
+  "streets": {
+   "id": "streets",
+   "theme": "movement",
+   "title": "streets",
+   "unit": "m of street per ha",
+   "kind": "vector",
+   "method": "The roads and paths a person can walk (every class but motorways), from Overture's segments of OpenStreetMap. On the grid and wards: metres of street per hectare of the unit's land in the city.\n",
+   "confidence": "measured",
+   "aggregate": {
+    "grid": "recompute",
+    "ward": "recompute"
+   },
+   "sources": [
+    "overture_transportation",
+    "osm"
+   ],
+   "implements": {
+    "py": "earthos.streets.fetch"
+   },
+   "shown": "measured",
+   "built": true
+  },
+  "surface_water": {
+   "id": "surface_water",
+   "theme": "water",
+   "title": "surface water",
+   "unit": "share of observations",
+   "kind": "raster",
+   "method": "JRC Global Surface Water occurrence: the share of valid observations from 1984 to 2020 in which each 30 m pixel was water, as the mean per cell and ward.\n",
+   "confidence": "measured",
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "sources": [
+    "jrc_gsw"
+   ],
+   "implements": {
+    "py": "earthos.water.fetch_gsw"
+   },
+   "shown": "measured",
+   "built": true
+  },
+  "terrain_bare_earth": {
+   "id": "terrain_bare_earth",
+   "theme": "ground",
+   "title": "ground (bare earth)",
+   "unit": "m",
+   "kind": "raster",
+   "method": "FABDEM, Copernicus GLO-30 with buildings and trees removed by a model; under the commercial setting the surface model stands in, and drainage reads worse.\n",
+   "confidence": "modelled",
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "sources": [
+    "cartodem",
+    "fabdem",
+    "copernicus_glo30"
+   ],
+   "implements": {
+    "py": "earthos.terrain.fetch_bare_earth"
+   },
+   "shown": "modelled",
+   "built": true
+  },
+  "terrain_surface": {
+   "id": "terrain_surface",
+   "theme": "ground",
+   "title": "ground and roofs (surface)",
+   "unit": "m",
+   "kind": "raster",
+   "method": "Copernicus GLO-30 heights, which include buildings and trees.",
+   "confidence": "measured",
+   "aggregate": {
+    "grid": "mean",
+    "ward": "mean"
+   },
+   "sources": [
+    "cartodem",
+    "copernicus_glo30"
+   ],
+   "implements": {
+    "py": "earthos.terrain.fetch_surface"
+   },
+   "shown": "measured",
+   "built": true
+  },
+  "wards": {
+   "id": "wards",
+   "theme": "profile",
+   "title": "wards",
+   "unit": "",
+   "kind": "vector",
+   "method": "The city's ward polygons from the first open source that covers it, with the delimitation year on the card. Properties are renamed to ward_id, ward_no and name; nothing is redrawn.\n",
+   "confidence": "measured",
+   "sources": [
+    "datameet_wards",
+    "opencity_wards",
+    "osm"
+   ],
+   "implements": {
+    "py": "earthos.wards.fetch_wards"
+   },
+   "shown": "measured",
+   "built": true
+  }
+ },
+ "sources": {
+  "bhuvan_lulc": {
+   "id": "bhuvan_lulc",
+   "title": "Bhuvan land use and land cover, 1:50k",
+   "publisher": "NRSC (ISRO), Bhuvan",
+   "url": "https://bhuvan.nrsc.gov.in",
+   "access": "wms",
+   "coverage": {
+    "countries": [
+     "IN"
+    ]
+   },
+   "resolution_m": "vector",
+   "period": "2005-2016",
+   "licence": "NRSC single-user licence",
+   "commercial": false,
+   "tier": "india-official",
+   "use": "view-only",
+   "reliability_note": "Shown as WMS in the atlas only; no export, nothing derived published (single-user, non-transferable licence).",
+   "citation": "Bhuvan terms of use (as quoted 2015; current wording to re-read)",
+   "attribution": "Bhuvan, NRSC/ISRO"
+  },
+  "black_marble": {
+   "id": "black_marble",
+   "title": "NASA Black Marble, annual night lights (VNP46A4, collection 2)",
+   "publisher": "NASA (LAADS DAAC)",
+   "url": "https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/VNP46A4/",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 500,
+   "period": "2012-",
+   "licence": "NASA open data (no restrictions on use)",
+   "commercial": true,
+   "tier": "global-established",
+   "reliability_note": "Corrected for moonlight, atmosphere, snow and seasonal vegetation, which VNL is not. The near-nadir snow-free composite is used, since off-nadir views see building walls and read brighter in dense cores. Downloads need a free NASA Earthdata login.\n",
+   "citation": "Román et al. 2018, Remote Sensing of Environment 210, 113-143",
+   "attribution": "NASA Black Marble VNP46A4 (Román et al. 2018), LAADS DAAC"
+  },
+  "cartodem": {
+   "id": "cartodem",
+   "title": "CartoDEM",
+   "publisher": "NRSC (ISRO), Bhuvan",
+   "url": "https://bhuvan.nrsc.gov.in",
+   "access": "manual",
+   "coverage": {
+    "countries": [
+     "IN"
+    ]
+   },
+   "resolution_m": 30,
+   "period": "2005-2008",
+   "licence": "NRSC single-user licence",
+   "commercial": false,
+   "tier": "india-official",
+   "use": "excluded",
+   "reliability_note": "Dropped as a candidate: private users need ISRO clearance, and Bhuvan's licence is single-user and non-transferable, so nothing derived from it could be published.\n",
+   "citation": "Bhuvan terms of use (as quoted 2015; current wording to re-read)",
+   "attribution": "CartoDEM, NRSC/ISRO"
+  },
+  "copernicus_glo30": {
+   "id": "copernicus_glo30",
+   "title": "Copernicus DEM GLO-30 (surface)",
+   "publisher": "European Space Agency",
+   "url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
+   "access": "planetary-computer-stac",
+   "coverage": "global",
+   "resolution_m": 30,
+   "period": "2011-2015",
+   "licence": "Copernicus DEM licence",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "Copernicus DEM, © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA"
+  },
+  "datameet_wards": {
+   "id": "datameet_wards",
+   "title": "Municipal Spatial Data (ward boundaries)",
+   "publisher": "DataMeet India community",
+   "url": "https://github.com/datameet/Municipal_Spatial_Data",
+   "access": "http",
+   "coverage": {
+    "cities": [
+     "bengaluru",
+     "mumbai",
+     "ahmedabad"
+    ]
+   },
+   "resolution_m": "vector",
+   "period": "2017-2022",
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "community",
+   "reliability_note": "Bengaluru's BBMP.geojson is the 243 wards of the 2022 delimitation, scraped from KSRSAC's Bengaluru GIS. The city has since become five corporations under the Greater Bengaluru Authority (about 369 wards, 2025); those boundaries are not yet open as GIS (phase B9).\n",
+   "attribution": "Municipal Spatial Data by DataMeet India community (CC BY 4.0)"
+  },
+  "dynamic_world": {
+   "id": "dynamic_world",
+   "title": "Dynamic World (annual composite)",
+   "publisher": "Google and World Resources Institute",
+   "url": "https://dynamicworld.app",
+   "access": "earth-engine",
+   "coverage": "global",
+   "resolution_m": 10,
+   "period": "2015-",
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "Dynamic World, Google and WRI (Brown et al. 2022), CC BY 4.0"
+  },
+  "esa_worldcover": {
+   "id": "esa_worldcover",
+   "title": "ESA WorldCover 2021",
+   "publisher": "European Space Agency",
+   "url": "https://esa-worldcover.org",
+   "access": "planetary-computer-stac",
+   "coverage": "global",
+   "resolution_m": 10,
+   "period": 2021,
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "© ESA WorldCover project 2021 / contains modified Copernicus Sentinel data (2021), CC BY 4.0"
+  },
+  "fabdem": {
+   "id": "fabdem",
+   "title": "FABDEM (forest and buildings removed Copernicus DEM)",
+   "publisher": "University of Bristol (Hawker et al. 2022)",
+   "url": "https://data.bris.ac.uk/data/dataset/s5hqmjcdj8yo2ibzi9b4ew3sn",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 30,
+   "period": "2011-2015",
+   "licence": "CC-BY-NC-SA-4.0",
+   "commercial": false,
+   "tier": "global-established",
+   "attribution": "FABDEM, Hawker et al. (2022), CC BY-NC-SA 4.0"
+  },
+  "geoboundaries": {
+   "id": "geoboundaries",
+   "title": "geoBoundaries",
+   "publisher": "William & Mary geoLab",
+   "url": "https://www.geoboundaries.org",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": "vector",
+   "period": 2023,
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "geoBoundaries (Runfola et al. 2020), CC BY 4.0"
+  },
+  "ghs_built_h": {
+   "id": "ghs_built_h",
+   "title": "GHS-BUILT-H R2023A (average net building height, 3 arc-seconds)",
+   "publisher": "European Commission, Joint Research Centre",
+   "url": "https://ghsl.jrc.ec.europa.eu",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 90,
+   "period": 2018,
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "GHSL, European Commission JRC (2023), CC BY 4.0"
+  },
+  "ghs_pop": {
+   "id": "ghs_pop",
+   "title": "GHS-POP R2023A (residential population, 2020, 3 arc-seconds)",
+   "publisher": "European Commission, Joint Research Centre",
+   "url": "https://ghsl.jrc.ec.europa.eu",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 90,
+   "period": 2020,
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "GHSL, European Commission JRC (2023), GHS-POP R2023A, CC BY 4.0"
+  },
+  "jrc_gsw": {
+   "id": "jrc_gsw",
+   "title": "JRC Global Surface Water v1.3",
+   "publisher": "European Commission, Joint Research Centre",
+   "url": "https://global-surface-water.appspot.com",
+   "access": "planetary-computer-stac",
+   "coverage": "global",
+   "resolution_m": 30,
+   "period": "1984-2020",
+   "licence": "Copernicus programme terms (free, with acknowledgement and citation)",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "Source EC JRC/Google (Pekel et al. 2016, Nature)"
+  },
+  "landsat_c2_l2_st": {
+   "id": "landsat_c2_l2_st",
+   "title": "Landsat 8/9 Collection 2 Level-2 surface temperature",
+   "publisher": "USGS",
+   "url": "https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2",
+   "access": "planetary-computer-stac",
+   "coverage": "global",
+   "resolution_m": 30,
+   "period": "2013-",
+   "licence": "public-domain",
+   "commercial": true,
+   "tier": "global-established",
+   "reliability_note": "Thermal band about 100 m, resampled to 30 m by USGS. Surface temperature, not air.",
+   "attribution": "Landsat imagery courtesy of the U.S. Geological Survey"
+  },
+  "meta_hrsl": {
+   "id": "meta_hrsl",
+   "title": "High Resolution Settlement Layer v1.5",
+   "publisher": "Meta and CIESIN",
+   "url": "https://dataforgood.facebook.com/dfg/tools/high-resolution-population-density-maps",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 30,
+   "period": 2020,
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "Data for Good at Meta and CIESIN, High Resolution Settlement Layer (CC BY 4.0)"
+  },
+  "open_buildings_25d": {
+   "id": "open_buildings_25d",
+   "title": "Open Buildings 2.5D Temporal",
+   "publisher": "Google Research",
+   "url": "https://sites.research.google/gr/open-buildings/temporal/",
+   "access": "earth-engine",
+   "coverage": "global",
+   "resolution_m": 4,
+   "period": "2016-2023",
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "reliability_note": "4 m effective (rasters at 0.5 m) from Sentinel-2; covers Africa, South and South-East Asia, Latin America and the Caribbean, so all pilots including Dhaka.",
+   "attribution": "Google Open Buildings 2.5D Temporal, CC BY 4.0"
+  },
+  "opencity_wards": {
+   "id": "opencity_wards",
+   "title": "Ward boundaries (OpenCity)",
+   "publisher": "OpenCity (data.opencity.in)",
+   "url": "https://data.opencity.in",
+   "access": "http",
+   "coverage": {
+    "cities": [
+     "bengaluru",
+     "delhi",
+     "guwahati",
+     "mumbai",
+     "ahmedabad"
+    ]
+   },
+   "resolution_m": "vector",
+   "period": 2022,
+   "licence": "public-domain",
+   "commercial": true,
+   "tier": "community",
+   "reliability_note": "Delhi MCD 2022 (250 wards) and Guwahati 2022 (credited to Esri India's Living Atlas), as KML.",
+   "attribution": "OpenCity (data.opencity.in)"
+  },
+  "osm": {
+   "id": "osm",
+   "title": "OpenStreetMap",
+   "publisher": "OpenStreetMap contributors",
+   "url": "https://www.openstreetmap.org",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": "vector",
+   "period": "current",
+   "licence": "ODbL-1.0",
+   "commercial": true,
+   "tier": "community",
+   "attribution": "© OpenStreetMap contributors (ODbL)"
+  },
+  "overture_buildings": {
+   "id": "overture_buildings",
+   "title": "Overture Maps buildings",
+   "publisher": "Overture Maps Foundation",
+   "url": "https://overturemaps.org",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": "vector",
+   "period": "monthly releases",
+   "licence": "ODbL-1.0",
+   "commercial": true,
+   "tier": "global-established",
+   "reliability_note": "Conflated from OSM, Google Open Buildings and Microsoft footprints; traced and ML-detected shapes mixed.",
+   "attribution": "© OpenStreetMap contributors, Overture Maps Foundation (ODbL)"
+  },
+  "overture_transportation": {
+   "id": "overture_transportation",
+   "title": "Overture Maps transportation segments",
+   "publisher": "Overture Maps Foundation",
+   "url": "https://overturemaps.org",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": "vector",
+   "period": "monthly releases",
+   "licence": "ODbL-1.0",
+   "commercial": true,
+   "tier": "community",
+   "reliability_note": "OpenStreetMap's roads and paths, cut by Overture into segments between connectors; read as GeoParquet with DuckDB.",
+   "attribution": "© OpenStreetMap contributors, Overture Maps Foundation (ODbL)"
+  },
+  "viirs_vnl": {
+   "id": "viirs_vnl",
+   "title": "VIIRS Nighttime Lights, annual (VNL v2)",
+   "publisher": "Earth Observation Group, Colorado School of Mines",
+   "url": "https://eogdata.mines.edu/products/vnl/",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 500,
+   "period": "2012-",
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "use": "excluded",
+   "reliability_note": "Dropped as a candidate (2026-10-26): EOG now releases VNL under licence only, and scripted access has been for paid subscribers since June 2026. NASA Black Marble stands in.\n",
+   "citation": "https://eogdata.mines.edu/products/register/",
+   "attribution": "Earth Observation Group, Payne Institute, Colorado School of Mines (Elvidge et al. 2021), CC BY 4.0"
+  },
+  "worldpop": {
+   "id": "worldpop",
+   "title": "WorldPop constrained population, 100 m",
+   "publisher": "WorldPop, University of Southampton",
+   "url": "https://www.worldpop.org",
+   "access": "http",
+   "coverage": "global",
+   "resolution_m": 100,
+   "period": 2020,
+   "licence": "CC-BY-4.0",
+   "commercial": true,
+   "tier": "global-established",
+   "attribution": "WorldPop (www.worldpop.org), CC BY 4.0"
+  }
+ }
+}
