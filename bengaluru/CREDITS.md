@@ -10,7 +10,7 @@ Wards: Municipal Spatial Data by DataMeet India community (CC BY 4.0), 2022 deli
 | layer | confidence | built from |
 |---|---|---|
 | building_footprints | modelled | © OpenStreetMap contributors, Overture Maps Foundation (ODbL) |
-| building_heights | modelled | GHSL, European Commission JRC (2023), CC BY 4.0 |
+| building_heights | modelled | Google Open Buildings 2.5D Temporal, CC BY 4.0 |
 | density | modelled | © ESA WorldCover project 2021 / contains modified Copernicus Sentinel data (2021), CC BY 4.0; Data for Good at Meta and CIESIN, High Resolution Settlement Layer (CC BY 4.0) |
 | land_cover | modelled | © ESA WorldCover project 2021 / contains modified Copernicus Sentinel data (2021), CC BY 4.0 |
 | lst_hot_season | measured | Landsat imagery courtesy of the U.S. Geological Survey |
